@@ -1,0 +1,70 @@
+name: Header Crawl
+
+on:
+  workflow_dispatch:
+    inputs:
+      startUrl:
+        description: "Start-URL (z. B. https://www.raab-verlag.de/)"
+        required: true
+        type: string
+      maxDepth:
+        description: "Max. Tiefe (0–5 empfohlen)"
+        required: false
+        default: "2"
+      maxPages:
+        description: "Max. Seiten (Sicherheitslimit)"
+        required: false
+        default: "300"
+      sameOriginOnly:
+        description: "Nur gleiche Origin?"
+        required: false
+        default: "true"
+      includeSubdomains:
+        description: "Subdomains einschließen (nur wenn sameOriginOnly=false)"
+        required: false
+        default: "false"
+      followFromHeaderOnly:
+        description: "Nur Header-Links verfolgen?"
+        required: false
+        default: "true"
+      paramIgnore:
+        description: "Ignorierte Parameter (Komma, z. B. utm_,gclid)"
+        required: false
+        default: "utm_,gclid,fbclid,mc_,pk_"
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run header crawler
+        env:
+          START_URL: ${{ inputs.startUrl }}
+          MAX_DEPTH: ${{ inputs.maxDepth }}
+          MAX_PAGES: ${{ inputs.maxPages }}
+          SAME_ORIGIN_ONLY: ${{ inputs.sameOriginOnly }}
+          INCLUDE_SUBDOMAINS: ${{ inputs.includeSubdomains }}
+          FOLLOW_FROM_HEADER_ONLY: ${{ inputs.followFromHeaderOnly }}
+          PARAM_IGNORE: ${{ inputs.paramIgnore }}
+          PAGES_CSV: pages.csv
+          SUMMARY_CSV: summary.csv
+        run: node crawlHeaderOnly_cheerio.js
+
+      - name: Upload CSVs
+        uses: actions/upload-artifact@v4
+        with:
+          name: header-crawl-results
+          path: |
+            pages.csv
+            summary.csv
+          if-no-files-found: error
