@@ -1,0 +1,14 @@
+{
+  "name": "hmf-crawler",
+  "version": "1.0.0",
+  "description": "Header/Main/Footer Link Counter (online via GitHub Actions)",
+  "type": "commonjs",
+  "main": "crawlHeaderMainFooter_cheerio.js",
+  "scripts": {
+    "start": "node crawlHeaderMainFooter_cheerio.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "^2.6.7"
+  }
+}
