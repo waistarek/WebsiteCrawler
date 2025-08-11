@@ -1,0 +1,62 @@
+name: HMF Crawl
+
+on:
+  workflow_dispatch:
+    inputs:
+      startUrl:
+        description: "Start-URL (z. B. https://www.raab-verlag.de/)"
+        required: true
+        type: string
+      maxDepth:
+        description: "Max. Tiefe (0–5 empfohlen)"
+        required: false
+        default: "2"
+      maxPages:
+        description: "Max. Seiten (Sicherheitslimit)"
+        required: false
+        default: "300"
+      sameOriginOnly:
+        description: "Nur gleiche Origin?"
+        required: false
+        default: "true"
+      includeSubdomains:
+        description: "Subdomains einschließen (nur falls sameOriginOnly=false)?"
+        required: false
+        default: "false"
+      paramIgnore:
+        description: "Zu ignorierende Parameter (Komma, z. B. utm_,gclid,fbclid)"
+        required: false
+        default: "utm_,gclid,fbclid,mc_,pk_"
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm install
+
+      - name: Run crawler
+        env:
+          START_URL: ${{ inputs.startUrl }}
+          MAX_DEPTH: ${{ inputs.maxDepth }}
+          MAX_PAGES: ${{ inputs.maxPages }}
+          SAME_ORIGIN_ONLY: ${{ inputs.sameOriginOnly }}
+          INCLUDE_SUBDOMAINS: ${{ inputs.includeSubdomains }}
+          PARAM_IGNORE: ${{ inputs.paramIgnore }}
+          OUTPUT_CSV: crawl_results_cheerio.csv
+        run: node crawlHeaderMainFooter_cheerio.js
+
+      - name: Upload CSV artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: crawl-results
+          path: crawl_results_cheerio.csv
+          if-no-files-found: error
