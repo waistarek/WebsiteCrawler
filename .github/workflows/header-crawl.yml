@@ -35,6 +35,9 @@ on:
 jobs:
   crawl:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: HeaderCrawler  # << im richtigen Ordner arbeiten
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,7 +48,12 @@ jobs:
           node-version: "20"
 
       - name: Install deps
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Run header crawler
         env:
@@ -65,6 +73,6 @@ jobs:
         with:
           name: header-crawl-results
           path: |
-            pages.csv
-            summary.csv
+            HeaderCrawler/pages.csv
+            HeaderCrawler/summary.csv
           if-no-files-found: error
